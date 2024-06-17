@@ -1,0 +1,80 @@
+using System;
+using System.Windows.Forms;
+
+namespace BookingCalendar
+{
+    public partial class Form1 : Form
+    {
+        public Form1()
+        {
+            InitializeComponent();
+            InitializeCalendar();
+        }
+
+        private void InitializeCalendar()
+        {
+            // Set up the DataGridView columns
+            dgvCalendar.Columns.Add("RoomNumber", "Number");
+            dgvCalendar.Columns.Add("RoomType", "Type");
+            dgvCalendar.Columns.Add("RoomStatus", "Status");
+
+            for (int day = 1; day <= 31; day++)
+            {
+                dgvCalendar.Columns.Add("Day" + day, day.ToString("00"));
+            }
+
+            // Add sample room data
+            dgvCalendar.Rows.Add("101", "1 bed", "Ready");
+            dgvCalendar.Rows.Add("102", "1 bed", "Clean up");
+            dgvCalendar.Rows.Add("103", "2 beds", "Dirty");
+            dgvCalendar.Rows.Add("104", "2 beds", "Ready");
+            dgvCalendar.Rows.Add("203", "3 beds", "Clean up");
+            dgvCalendar.Rows.Add("204", "3 beds", "Clean up");
+
+            dgvCalendar.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
+
+            // Add event handler for cell click
+            dgvCalendar.CellClick += dgvCalendar_CellClick;
+        }
+
+        private void AddBooking(string roomNumber, string bookingId, DateTime checkIn, DateTime checkOut, string status)
+        {
+            foreach (DataGridViewRow row in dgvCalendar.Rows)
+            {
+                if (row.Cells["RoomNumber"].Value.ToString() == roomNumber)
+                {
+                    for (int day = checkIn.Day; day <= checkOut.Day; day++)
+                    {
+                        row.Cells["Day" + day].Value = bookingId;
+                        row.Cells["Day" + day].Style.BackColor = status == "paid" ? System.Drawing.Color.Green : System.Drawing.Color.Orange;
+                    }
+
+                    row.Cells["Day" + checkIn.Day].ToolTipText = $"Booking: {bookingId}\nRoom: {roomNumber}\nCheck-in: {checkIn:dd MMM yyyy}\nCheck-out: {checkOut:dd MMM yyyy}\nStatus: {status}";
+                }
+            }
+        }
+
+        private void Form1_Load(object sender, EventArgs e)
+        {
+            AddBooking("101", "A-12", new DateTime(2017, 3, 2), new DateTime(2017, 3, 23), "paid");
+            AddBooking("102", "A-58", new DateTime(2017, 3, 3), new DateTime(2017, 3, 11), "paid");
+            AddBooking("103", "A-45", new DateTime(2017, 3, 12), new DateTime(2017, 3, 26), "paid");
+        }
+
+        private void dgvCalendar_CellClick(object sender, DataGridViewCellEventArgs e)
+        {
+            if (e.RowIndex >= 0 && e.ColumnIndex > 2)
+            {
+                string bookingId = dgvCalendar.Rows[e.RowIndex].Cells[e.ColumnIndex].Value?.ToString();
+                if (!string.IsNullOrEmpty(bookingId))
+                {
+                    string roomNumber = dgvCalendar.Rows[e.RowIndex].Cells["RoomNumber"].Value.ToString();
+                    string roomType = dgvCalendar.Rows[e.RowIndex].Cells["RoomType"].Value.ToString();
+                    string status = dgvCalendar.Rows[e.RowIndex].Cells[e.ColumnIndex].ToolTipText;
+
+                    lblBookingDetails.Text = $"Booking: {bookingId}\nRoom: {roomNumber}\nType: {roomType}\n{status}";
+                }
+            }
+        }
+    }
+}
